@@ -34,7 +34,6 @@ const valueLabel = {
     padding: "5px",
     fontFamily: "GilmerRegular",
     fontSize: "13px",
-    color: "var(--vscode-foreground)",
     verticalAlign: "middle",
 };
 

@@ -250,7 +250,7 @@ export function ConnectorView(props: ConnectorViewProps) {
     async function filterCategories(categories: Category[]): Promise<Category[]> {
         const localConnectors = (
             await rpcClient.getBIDiagramRpcClient().getOpenApiGeneratedModules({ projectPath: "" })
-        ).modules;
+        )?.modules ?? [];
         return categories.map((category) => {
             if (category.metadata.label === "Local") {
                 const filteredItems = category.items.filter(

@@ -292,7 +292,7 @@ export function ExpressionLabelWidget(props: ExpressionLabelWidgetProps) {
                 data-testid={`expression-label-for-${link?.getSourcePort()?.getName()}-to-${link?.getTargetPort()?.getName()}`}
                 className={classNames(
                     classes.container,
-                    !isLinkSelected && !deleteInProgress && !collectClauseFn && classes.containerHidden
+                    !isLinkSelected && !deleteInProgress && !collectClauseFn && !diagnostic && classes.containerHidden
                 )}
             >
                 {elements}

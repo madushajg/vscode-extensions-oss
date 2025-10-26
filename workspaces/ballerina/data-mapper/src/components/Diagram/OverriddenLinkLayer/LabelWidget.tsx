@@ -19,6 +19,7 @@ import * as React from 'react';
 
 import styled from '@emotion/styled';
 import { DiagramEngine, LabelModel } from '@projectstorm/react-diagrams';
+import { ListenerHandle } from '@projectstorm/react-canvas-core';
 
 import { LinkOveryPortal } from './LinkOverlayPortal';
 
@@ -44,6 +45,9 @@ export const Foreign = styled.foreignObject`
 
 export class OveriddenLabelWidget extends React.Component<LabelWidgetProps> {
 	ref: React.RefObject<HTMLDivElement>;
+	private animationFrameId: number | null = null;
+	private sourceNodeListener?: ListenerHandle;
+	private targetNodeListener?: ListenerHandle;
 
 	constructor(props: LabelWidgetProps) {
 		super(props);
@@ -51,12 +55,63 @@ export class OveriddenLabelWidget extends React.Component<LabelWidgetProps> {
 	}
 
 	componentDidUpdate() {
-		window.requestAnimationFrame(this.calculateLabelPosition);
+		this.schedulePositionUpdate();
 	}
 
 	componentDidMount() {
-		window.requestAnimationFrame(this.calculateLabelPosition);
+		this.schedulePositionUpdate();
+		this.registerNodeListeners();
 	}
+
+	componentWillUnmount() {
+		if (this.animationFrameId !== null) {
+			window.cancelAnimationFrame(this.animationFrameId);
+		}
+		// Clean up listeners
+		if (this.sourceNodeListener) {
+			this.sourceNodeListener.deregister();
+		}
+		if (this.targetNodeListener) {
+			this.targetNodeListener.deregister();
+		}
+	}
+
+	registerNodeListeners = () => {
+		const link = this.props.label.getParent();
+		if (!link) return;
+
+		const sourcePort = link.getSourcePort();
+		const targetPort = link.getTargetPort();
+		
+		if (sourcePort) {
+			const sourceNode = sourcePort.getParent();
+			if (sourceNode) {
+				this.sourceNodeListener = sourceNode.registerListener({
+					positionChanged: () => {
+						this.schedulePositionUpdate();
+					}
+				});
+			}
+		}
+		
+		if (targetPort) {
+			const targetNode = targetPort.getParent();
+			if (targetNode) {
+				this.targetNodeListener = targetNode.registerListener({
+					positionChanged: () => {
+						this.schedulePositionUpdate();
+					}
+				});
+			}
+		}
+	};
+
+	schedulePositionUpdate = () => {
+		if (this.animationFrameId !== null) {
+			window.cancelAnimationFrame(this.animationFrameId);
+		}
+		this.animationFrameId = window.requestAnimationFrame(this.calculateLabelPosition);
+	};
 
 	findPathAndRelativePositionToRenderLabel = (index: number): { path: SVGPathElement; position: number } => {
 		// an array to hold all path lengths, making sure we hit the DOM only once to fetch this information
@@ -85,6 +140,11 @@ export class OveriddenLabelWidget extends React.Component<LabelWidgetProps> {
 	};
 
 	calculateLabelPosition = () => {
+		// Safety check: ensure ref is available
+		if (!this.ref.current) {
+			return;
+		}
+
 		const found = this.findPathAndRelativePositionToRenderLabel(this.props.index + 1);
 		if (!found) {
 			return;
@@ -99,16 +159,39 @@ export class OveriddenLabelWidget extends React.Component<LabelWidgetProps> {
 
 		const pathCentre = path.getPointAtLength(position);
 		const canvas = this.props.engine.getCanvas();
+		const model = this.props.engine.getModel();
 
 		// Get canvas boundaries
 		const canvasWidth = canvas?.offsetWidth || 0;
 		const canvasHeight = canvas?.offsetHeight || 0;
 
-		// Calculate initial centered position
-		let x = pathCentre.x - labelDimensions.width / 2 + this.props.label.getOptions().offsetX;
-		let y = pathCentre.y - labelDimensions.height / 2 + this.props.label.getOptions().offsetY;
+		// Get the model's offset to account for canvas transformations
+		const offsetX = model.getOffsetX();
+		const offsetY = model.getOffsetY();
+		const zoomLevel = model.getZoomLevel() / 100;
 
-		// Apply boundary constraints to keep label fully visible
+		// Calculate initial centered position with canvas offset applied
+		let x = pathCentre.x - labelDimensions.width / 2 + this.props.label.getOptions().offsetX + offsetX;
+		let y = pathCentre.y - labelDimensions.height / 2 + this.props.label.getOptions().offsetY + offsetY;
+
+		// Check if label is outside visible canvas area
+		const isOutOfBounds = 
+			x + labelDimensions.width < 0 || // completely off left
+			x > canvasWidth || // completely off right
+			y + labelDimensions.height < 0 || // completely off top
+			y > canvasHeight; // completely off bottom
+
+		// Hide label if out of bounds
+		if (isOutOfBounds) {
+			this.ref.current.style.visibility = 'hidden';
+			this.ref.current.style.transform = `translate(${x}px, ${y}px)`;
+			return;
+		}
+
+		// Show label if it was hidden
+		this.ref.current.style.visibility = 'visible';
+
+		// Apply boundary constraints to keep label fully visible within canvas
 		// Ensure label doesn't go off the left edge
 		if (x < 0) {
 			x = 0;

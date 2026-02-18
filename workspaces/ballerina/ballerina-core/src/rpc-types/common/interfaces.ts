@@ -125,6 +125,10 @@ export interface SampleDownloadRequest {
     zipFileName: string;
 }
 
+export interface DefaultOrgNameResponse {
+    orgName: string;
+}
+
 export interface PublishToCentralResponse {
     success: boolean;
     message?: string;

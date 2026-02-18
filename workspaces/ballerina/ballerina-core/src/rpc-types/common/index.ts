@@ -34,6 +34,7 @@ import {
     ShowErrorMessageRequest,
     WorkspaceTypeResponse,
     SampleDownloadRequest,
+    DefaultOrgNameResponse,
     PublishToCentralResponse
 } from "./interfaces";
 
@@ -54,6 +55,7 @@ export interface CommonRPCAPI {
     getCurrentProjectTomlValues: () => Promise<Record<string, any>>;
     getWorkspaceType: () => Promise<WorkspaceTypeResponse>;
     downloadSelectedSampleFromGithub: (params: SampleDownloadRequest) => Promise<boolean>;
+    getDefaultOrgName: () => Promise<DefaultOrgNameResponse>;
     publishToCentral: () => Promise<PublishToCentralResponse>;
     hasCentralPATConfigured: () => Promise<boolean>;
 }

@@ -32,7 +32,7 @@ import {
 import styled from "@emotion/styled";
 
 import { ExpressionFormField, FieldDerivation, FormExpressionEditorProps, FormField, FormImports, FormValues } from "./types";
-import { EditorFactory } from "../editors/EditorFactory";
+import { FieldFactory } from "../editors/FieldFactory";
 import { getValueForDropdown, isDropdownField } from "../editors/utils";
 import {
     Diagnostic,
@@ -501,7 +501,7 @@ export const Form = forwardRef((props: FormProps) => {
                     } else if (isDropdownField(field)) {
                         defaultValues[field.key] = getValueForDropdown(field) ?? "";
                     } else if (field.type === "FLAG" && field.types?.length > 1) {
-                        if (field.value && typeof field.value === "boolean") {
+                        if (typeof field.value === "boolean") {
                             defaultValues[field.key] = String(field.value);
                         }
                         else {
@@ -517,7 +517,7 @@ export const Form = forwardRef((props: FormProps) => {
                     if (field.key === "variable") {
                         defaultValues[field.key] = formValues[field.key] ?? defaultValues[field.key] ?? "";
                     }
-                    if (field.key === "parameters" && field.value.length === 0) {
+                    if (field.key === "parameters" && field.value?.length && field.value.length === 0) {
                         defaultValues[field.key] = formValues[field.key] ?? [];
                     }
 
@@ -1026,7 +1026,7 @@ export const Form = forwardRef((props: FormProps) => {
                         const updatedField = updateFormFieldWithImports(field, formImports);
                         renderedComponents.push(
                             <S.Row key={updatedField.key}>
-                                <EditorFactory
+                                <FieldFactory
                                     field={updatedField}
                                     selectedNode={selectedNode}
                                     openRecordEditor={
@@ -1110,7 +1110,7 @@ export const Form = forwardRef((props: FormProps) => {
                                 const updatedField = updateFormFieldWithImports(field, formImports);
                                 return (
                                     <S.Row key={updatedField.key}>
-                                        <EditorFactory
+                                        <FieldFactory
                                             field={updatedField}
                                             openRecordEditor={
                                                 openRecordEditor &&
@@ -1134,7 +1134,7 @@ export const Form = forwardRef((props: FormProps) => {
                             const updatedField = updateFormFieldWithImports(field, formImports);
                             return (
                                 <S.Row key={updatedField.key}>
-                                    <EditorFactory
+                                    <FieldFactory
                                         field={updatedField}
                                         openRecordEditor={
                                             openRecordEditor &&
@@ -1155,7 +1155,7 @@ export const Form = forwardRef((props: FormProps) => {
             {!preserveOrder && (variableField || typeField || targetTypeField) && (
                 <S.CategoryRow topBorder={!compact && hasParameters}>
                     {variableField && (
-                        <EditorFactory
+                        <FieldFactory
                             field={variableField}
                             handleOnFieldFocus={handleOnFieldFocus}
                             recordTypeFields={recordTypeFields}
@@ -1164,7 +1164,7 @@ export const Form = forwardRef((props: FormProps) => {
                         />
                     )}
                     {typeField && !isInferredReturnType && (
-                        <EditorFactory
+                        <FieldFactory
                             field={typeField}
                             openRecordEditor={
                                 openRecordEditor &&
@@ -1181,7 +1181,7 @@ export const Form = forwardRef((props: FormProps) => {
                     )}
                     {targetTypeField && !targetTypeField.advanced && (
                         <>
-                            <EditorFactory
+                            <FieldFactory
                                 field={targetTypeField}
                                 handleOnFieldFocus={handleOnFieldFocus}
                                 recordTypeFields={recordTypeFields}

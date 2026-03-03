@@ -16,7 +16,7 @@
  * under the License.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     DIRECTORY_MAP,
     EVENT_TYPE,
@@ -102,6 +102,21 @@ const ItemCount = styled.span`
     font-size: 11px;
     color: ${ThemeColors.ON_SURFACE};
     opacity: 0.6;
+`;
+
+const BetaChip = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, ${ThemeColors.PRIMARY} 35%, transparent);
+    background: color-mix(in srgb, ${ThemeColors.PRIMARY} 14%, transparent);
+    color: ${ThemeColors.PRIMARY};
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 `;
 
 const SectionContent = styled.div<{ vertical?: boolean }>`
@@ -195,6 +210,7 @@ interface SectionConfig {
     accentColor: string;
     addTooltip: string;
     column: "primary" | "secondary";
+    beta?: boolean;
 }
 
 const SECTIONS: SectionConfig[] = [
@@ -208,13 +224,22 @@ const SECTIONS: SectionConfig[] = [
         column: "primary",
     },
     {
-        key: DIRECTORY_MAP.CONFIGURABLE,
-        title: "Configurations",
-        icon: "bi-config",
-        emptyMessage: "No configurations yet",
-        accentColor: "var(--vscode-charts-yellow)",
-        addTooltip: "Add New Configuration",
+        key: DIRECTORY_MAP.FUNCTION,
+        title: "Functions",
+        icon: "bi-function",
+        emptyMessage: "No functions yet",
+        accentColor: "var(--vscode-charts-green)",
+        addTooltip: "Add New Function",
         column: "primary",
+    },
+    {
+        key: DIRECTORY_MAP.DATA_MAPPER,
+        title: "Data Mappers",
+        icon: "dataMapper",
+        emptyMessage: "No data mappers yet",
+        accentColor: "var(--vscode-charts-lines)",
+        addTooltip: "Add New Data Mapper",
+        column: "secondary",
     },
     {
         key: DIRECTORY_MAP.CONNECTION,
@@ -226,12 +251,12 @@ const SECTIONS: SectionConfig[] = [
         column: "secondary",
     },
     {
-        key: DIRECTORY_MAP.FUNCTION,
-        title: "Functions",
-        icon: "bi-function",
-        emptyMessage: "No functions yet",
-        accentColor: "var(--vscode-charts-green)",
-        addTooltip: "Add New Function",
+        key: DIRECTORY_MAP.CONFIGURABLE,
+        title: "Configurables",
+        icon: "bi-config",
+        emptyMessage: "No configurables yet",
+        accentColor: "var(--vscode-charts-yellow)",
+        addTooltip: "Add New Configurable",
         column: "secondary",
     },
     {
@@ -242,15 +267,7 @@ const SECTIONS: SectionConfig[] = [
         accentColor: "var(--vscode-charts-orange)",
         addTooltip: "Add New Natural Function",
         column: "secondary",
-    },
-    {
-        key: DIRECTORY_MAP.DATA_MAPPER,
-        title: "Data Mappers",
-        icon: "dataMapper",
-        emptyMessage: "No data mappers yet",
-        accentColor: "var(--vscode-charts-lines)",
-        addTooltip: "Add New Data Mapper",
-        column: "secondary",
+        beta: true,
     },
 ];
 
@@ -283,8 +300,15 @@ interface LibraryOverviewProps {
 export function LibraryOverview(props: LibraryOverviewProps) {
     const { projectStructure, searchQuery } = props;
     const { rpcClient } = useRpcContext();
+    const [isExperimentalEnabled, setIsExperimentalEnabled] = useState<boolean>(false);
 
     const isSearching = searchQuery.trim().length > 0;
+
+    useEffect(() => {
+        rpcClient.getCommonRpcClient().experimentalEnabled()
+            .then((enabled) => setIsExperimentalEnabled(enabled))
+            .catch(() => setIsExperimentalEnabled(false));
+    }, [rpcClient]);
 
     const handleAdd = (key: DIRECTORY_MAP) => {
         if (key === DIRECTORY_MAP.CONNECTION) {
@@ -380,8 +404,10 @@ export function LibraryOverview(props: LibraryOverviewProps) {
                 ? allItems.filter((item) => item.name.toLowerCase().includes(query))
                 : allItems;
             return { section, allItems, filteredItems };
-        });
-    }, [dirMap, query, isSearching]);
+        }).filter(({ section }) => (
+            section.key !== DIRECTORY_MAP.NP_FUNCTION || isExperimentalEnabled
+        ));
+    }, [dirMap, query, isSearching, isExperimentalEnabled]);
 
     const primarySections = sectionsWithItems.filter((s) => s.section.column === "primary");
     const secondarySections = sectionsWithItems.filter((s) => s.section.column === "secondary");
@@ -399,6 +425,7 @@ export function LibraryOverview(props: LibraryOverviewProps) {
                     <SectionHeaderLeft>
                         <Icon name={section.icon} sx={{ fontSize: 18, width: 18, height: 18 }} />
                         <SectionTitle>{section.title}</SectionTitle>
+                        {section.beta && <BetaChip>Beta</BetaChip>}
                         {hasItems && (
                             <ItemCount>
                                 ({isSearching ? `${filteredItems.length}/${allItems.length}` : allItems.length})

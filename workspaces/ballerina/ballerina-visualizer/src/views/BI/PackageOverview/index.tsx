@@ -112,14 +112,14 @@ const MainContent = styled.div<{ fullWidth?: boolean }>`
     max-height: calc(100vh - 90px); // Adjust based on header and any margins
 `;
 
-const DiagramPanel = styled.div<{ noPadding?: boolean }>`
+const DiagramPanel = styled.div<{ noPadding?: boolean; isLibrary?: boolean }>`
     border: 1px solid ${ThemeColors.OUTLINE_VARIANT};
     border-radius: 4px;
     padding: ${(props: { noPadding: boolean; }) => (props.noPadding ? "0" : "16px")};
     overflow: auto;
     display: flex;
     flex-direction: column;
-    min-height: calc(60vh); // Subtracting header height (50px) and padding (32px)
+    min-height: ${(props: { isLibrary?: boolean }) => props.isLibrary ? "auto" : "calc(60vh)"};
 `;
 
 const LeftContent = styled.div`
@@ -941,7 +941,7 @@ export function PackageOverview(props: PackageOverviewProps) {
                 )}
                 <MainContent fullWidth={isLibrary}>
                     <LeftContent>
-                        <DiagramPanel noPadding={true}>
+                        <DiagramPanel noPadding={true} isLibrary={isLibrary}>
                             {showAlert && (
                                 <AlertBoxWithClose
                                     subTitle={

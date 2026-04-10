@@ -137,8 +137,11 @@ async function tryOpenPackageOverviewForDiscoveredProject(): Promise<boolean> {
     }
 
     if (workspaceType.type === "MULTIPLE_PROJECTS") {
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
+        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+            return false;
+        }
+        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfoResponse.projectInfo);
         openPackageOverviewView(packageRoot, true);
         return true;
     }

@@ -2021,6 +2021,12 @@ export interface ProjectInfoRequest {
     projectPath: string;
 }
 
+export interface ProjectInfoResponse {
+    projectInfo?: ProjectInfo;
+    errorMsg?: string;
+    stacktrace?: string;
+}
+
 export interface ProjectInfo {
     projectKind: PROJECT_KIND;
     name?: string;
@@ -2129,7 +2135,7 @@ export interface ExtendedLangClientInterface extends BIInterface {
     updateStatusBar(): void;
     getDidOpenParams(): DidOpenParams;
     getProjectArtifacts(params: ProjectArtifactsRequest): Promise<ProjectArtifacts>;
-    getProjectInfo(params: ProjectInfoRequest): Promise<ProjectInfo>;
+    getProjectInfo(params: ProjectInfoRequest): Promise<ProjectInfoResponse>;
     getSimpleTypeOfExpression(params: GetSimpleTypeOfExpressionRequest): Promise<GetSimpleTypeOfExpressionResponse>;
     openConfigToml(params: OpenConfigTomlRequest): Promise<void>;
 }

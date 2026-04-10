@@ -32,7 +32,14 @@ export async function discoverTestFunctionsInProject(ballerinaExtInstance: Balle
     groups.push(testController.id);
     
     const workspaceRoot = getWorkspaceRoot();
-    const projectInfo = await ballerinaExtInstance.langClient?.getProjectInfo({ projectPath: workspaceRoot });
+    const projectInfoResponse = await ballerinaExtInstance.langClient?.getProjectInfo({ projectPath: workspaceRoot });
+
+    if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+        return;
+    }
+
+    const projectInfo = projectInfoResponse?.projectInfo;
+
     const isEmptyProject = projectInfo?.projectKind === PROJECT_KIND.WORKSPACE_PROJECT &&
         projectInfo.children?.length === 0;
 

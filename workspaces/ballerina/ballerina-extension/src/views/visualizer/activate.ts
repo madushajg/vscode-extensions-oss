@@ -153,8 +153,14 @@ export function activateSubscriptions() {
                     // Initialize project structure if not already set by finding and loading the Ballerina project root
                     // Can happen when the user opens a directory containing multiple Ballerina projects
                     if (projectRoot) {
-                        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: projectRoot });
-                        await StateMachine.updateProjectRootAndInfo(projectRoot, projectInfo);
+                        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: projectRoot });
+
+                        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+                            vscode.window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
+                            return;
+                        }
+
+                        await StateMachine.updateProjectRootAndInfo(projectRoot, projectInfoResponse.projectInfo);
                     }
                 }
 
@@ -247,8 +253,13 @@ async function tryOpenTypeDiagramForDiscoveredProject(): Promise<boolean> {
     }
 
     if (workspaceType.type === "MULTIPLE_PROJECTS") {
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
+        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+
+        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+            return false;
+        }
+
+        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfoResponse.projectInfo);
         openTypeDiagramView(packageRoot, true);
         return true;
     }

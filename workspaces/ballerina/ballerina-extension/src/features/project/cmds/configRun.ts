@@ -60,7 +60,12 @@ function activateConfigRunCommand() {
                     window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
                     return;
                 }
-                projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+                const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+                if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+                    window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
+                    return;
+                }
+                const projectInfo = projectInfoResponse.projectInfo;
                 targetPath = projectInfo.projectPath ?? packageRoot;
             } else if (result.type === "BALLERINA_WORKSPACE") {
                 if (requiresPackageSelection(workspacePath, webviewType, projectPath, isWebviewOpen, hasActiveTextEditor)) {

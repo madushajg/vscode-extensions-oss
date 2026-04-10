@@ -124,12 +124,14 @@ export async function updateProjectArtifacts(publishedArtifacts: ArtifactsNotifi
             return;
         }
         
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: workspacePath });
-        if (!projectInfo) {
+        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: workspacePath });
+
+        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
             console.warn("[updateProjectArtifacts] Project info not found for the project:", rootPath);
             return;
         }
 
+        const projectInfo = projectInfoResponse.projectInfo;
         const isWorkspace = projectInfo.projectKind === PROJECT_KIND.WORKSPACE_PROJECT;
         const packages = isWorkspace ? projectInfo.children : [projectInfo];
 

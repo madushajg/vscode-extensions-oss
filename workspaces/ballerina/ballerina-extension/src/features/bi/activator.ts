@@ -142,8 +142,12 @@ export function activate(context: BallerinaExtension) {
                     window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
                     return;
                 }
-                const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-                await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
+                const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+                if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+                    window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
+                    return;
+                }
+                await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfoResponse.projectInfo);
                 openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.PackageOverview });
 
             }
@@ -346,8 +350,12 @@ async function handleDebugCommandWithProjectDiscovery() {
     const packageRoot = await getCurrentProjectRoot();
 
     if (packageRoot) {
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
+        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+            window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
+            return;
+        }
+        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfoResponse.projectInfo);
         startDebugging(Uri.file(packageRoot), false, true);
     } else {
         window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
@@ -629,8 +637,11 @@ async function tryHandleCommandWithDiscoveredProject(
     }
 
     if (workspaceType.type === "MULTIPLE_PROJECTS") {
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
+        const projectInfoResponse = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
+        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+            return false;
+        }
+        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfoResponse.projectInfo);
         openView(EVENT_TYPE.OPEN_VIEW, {
             view,
             projectPath: packageRoot,

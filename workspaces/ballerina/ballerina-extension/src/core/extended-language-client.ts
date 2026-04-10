@@ -267,7 +267,7 @@ import {
     ExpressionTokensRequest,
     ExpressionTokensResponse,
     ProjectInfoRequest,
-    ProjectInfo,
+    ProjectInfoResponse,
     onMigratedProject,
     ProjectMigrationResult,
     FieldPropertyRequest,
@@ -637,8 +637,8 @@ export class ExtendedLangClient extends LanguageClient implements ExtendedLangCl
         return this.sendRequest<ProjectArtifacts>(EXTENDED_APIS.GET_ARTIFACTS, params);
     }
 
-    async getProjectInfo(params: ProjectInfoRequest): Promise<ProjectInfo> {
-        return this.sendRequest<ProjectInfo>(EXTENDED_APIS.GET_PROJECT_INFO, params);
+    async getProjectInfo(params: ProjectInfoRequest): Promise<ProjectInfoResponse> {
+        return this.sendRequest<ProjectInfoResponse>(EXTENDED_APIS.GET_PROJECT_INFO, params);
     }
 
     async definition(params: DefinitionParams): Promise<Location | Location[] | LocationLink[]> {

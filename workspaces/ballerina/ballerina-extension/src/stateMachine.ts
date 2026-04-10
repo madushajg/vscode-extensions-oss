@@ -129,12 +129,15 @@ const stateMachine = createMachine<MachineContext>(
                             }
 
                             // Fetch updated project info from language server
-                            const projectInfo = await context.langClient.getProjectInfo({ projectPath });
+                            const projectInfoResponse = await context.langClient.getProjectInfo({ projectPath });
+                            if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+                                throw new Error("Failed to fetch updated project info: " + projectInfoResponse?.errorMsg);
+                            }
 
                             // Update context with new project info
                             stateService.send({
                                 type: 'UPDATE_PROJECT_INFO',
-                                projectInfo
+                                projectInfo: projectInfoResponse.projectInfo,
                             });
                         } catch (error) {
                             console.error("Error refreshing project info:", error);
@@ -516,8 +519,11 @@ const stateMachine = createMachine<MachineContext>(
                     if (!projectPath) {
                         resolve({ projectInfo: undefined });
                     } else {
-                        const projectInfo = await context.langClient.getProjectInfo({ projectPath });
-                        resolve({ projectInfo });
+                        const projectInfoResponse = await context.langClient.getProjectInfo({ projectPath });
+                        if (projectInfoResponse?.errorMsg || !projectInfoResponse.projectInfo) {
+                            throw new Error(projectInfoResponse?.errorMsg);
+                        }
+                        resolve({ projectInfo: projectInfoResponse.projectInfo });
                     }
                 } catch (error) {
                     throw new Error("Error occurred while fetching project info.", error);

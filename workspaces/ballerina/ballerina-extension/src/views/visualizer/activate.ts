@@ -181,12 +181,8 @@ export function activateSubscriptions() {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand(SHARED_COMMANDS.OPEN_BI_WELCOME, () => {
-            if (StateMachine.langClient()) {
-                openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.BIWelcome });
-            } else {
-                openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.SetupView });
-            }
+        vscode.commands.registerCommand(SHARED_COMMANDS.SETUP_BALLERINA_COMMAND, () => {
+            openView(EVENT_TYPE.OPEN_VIEW, { view: MACHINE_VIEW.SetupView });
         })
     );
 

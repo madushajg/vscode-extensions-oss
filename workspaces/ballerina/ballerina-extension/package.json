@@ -580,11 +580,6 @@
                 }
             },
             {
-                "command": "ballerina.open.bi.welcome",
-                "title": "Open Welcome",
-                "category": "BI"
-            },
-            {
                 "command": "ballerina.open.bi.new",
                 "title": "New Integration",
                 "category": "BI"

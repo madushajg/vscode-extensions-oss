@@ -705,7 +705,7 @@ export class BallerinaExtension {
     }
 
     async updateBallerinaVisually() {
-        commands.executeCommand(SHARED_COMMANDS.OPEN_BI_WELCOME);
+        commands.executeCommand(SHARED_COMMANDS.SETUP_BALLERINA_COMMAND);
         const realPath = this.ballerinaHome ? fs.realpathSync.native(this.ballerinaHome) : "";
         this.executeCommandWithProgress(realPath.includes("ballerina-home") ? 'bal dist update' : 'sudo bal dist update');
     }

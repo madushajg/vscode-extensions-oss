@@ -639,11 +639,6 @@
                 "category": "BI"
             },
             {
-                "command": "BI.view.typeDiagram",
-                "title": "Type Diagram",
-                "category": "BI"
-            },
-            {
                 "command": "BI.project-explorer.add-connection",
                 "title": "Add Connection",
                 "icon": "$(add)",
@@ -674,13 +669,6 @@
                 "command": "BI.project-explorer.add-type",
                 "title": "Add Types",
                 "icon": "$(add)",
-                "group": "navigation",
-                "category": "BI"
-            },
-            {
-                "command": "BI.project-explorer.view-type-diagram",
-                "title": "View Type Diagram",
-                "icon": "$(ballerina-design-view)",
                 "group": "navigation",
                 "category": "BI"
             },

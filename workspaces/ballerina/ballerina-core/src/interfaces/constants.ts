@@ -38,7 +38,7 @@ export const BI_COMMANDS = {
     DELETE_COMPONENT: 'BI.project-explorer.delete',
     ADD_ENTRY_POINT: 'BI.project-explorer.add-entry-point',
     ADD_TYPE: 'BI.project-explorer.add-type',
-    VIEW_TYPE_DIAGRAM: 'BI.project-explorer.view-type-diagram',
+    VIEW_TYPE_DIAGRAM: 'WI.project-explorer.view-type-diagram',
     ADD_FUNCTION: 'BI.project-explorer.add-function',
     OPEN_TYPE_DIAGRAM: 'BI.view.typeDiagram',
     ADD_CONFIGURATION: 'BI.project-explorer.add-configuration',

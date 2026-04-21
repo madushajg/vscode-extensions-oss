@@ -202,87 +202,8 @@ export function activateSubscriptions() {
         })
     );
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand(BI_COMMANDS.OPEN_TYPE_DIAGRAM, handleOpenTypeDiagram)
-    );
-
     StateMachine.service().onTransition((state) => {
         vscode.commands.executeCommand('setContext', 'showBalGoToSource', state.context?.documentUri !== undefined);
     });
 
 }
-
-// --- Type Diagram Command Helpers ---
-
-function openTypeDiagramView(projectPath?: string, resetHistory = false): void {
-    openView(
-        EVENT_TYPE.OPEN_VIEW,
-        { view: MACHINE_VIEW.TypeDiagram, projectPath },
-        resetHistory
-    );
-}
-
-async function openTypeDiagramForWorkspace(projectInfo: ProjectInfo): Promise<boolean> {
-    const availablePackages = projectInfo?.children.map((child: any) => child.projectPath) ?? [];
-
-    const selectedPackage = await selectPackageOrPrompt(availablePackages, "Select an integration to open type diagram");
-    if (!selectedPackage) {
-        return false;
-    }
-
-    openTypeDiagramView(selectedPackage);
-    return true;
-}
-
-async function tryOpenTypeDiagramForDiscoveredProject(): Promise<boolean> {
-    const workspaceType = await findWorkspaceTypeFromWorkspaceFolders();
-    const packageRoot = await getCurrentProjectRoot();
-
-    if (!packageRoot) {
-        return false;
-    }
-
-    if (workspaceType.type === "MULTIPLE_PROJECTS") {
-        const projectInfo = await StateMachine.langClient().getProjectInfo({ projectPath: packageRoot });
-        await StateMachine.updateProjectRootAndInfo(packageRoot, projectInfo);
-        openTypeDiagramView(packageRoot, true);
-        return true;
-    }
-
-    if (workspaceType.type === "BALLERINA_WORKSPACE") {
-        openTypeDiagramView(packageRoot, true);
-        return true;
-    }
-
-    return false;
-}
-
-async function handleOpenTypeDiagram(): Promise<void> {
-    const { projectInfo, projectPath, view, workspacePath } = StateMachine.context();
-    const isWebviewOpen = VisualizerWebview.currentPanel !== undefined;
-    const hasActiveTextEditor = !!vscode.window.activeTextEditor;
-
-    const currentBallerinaFile = tryGetCurrentBallerinaFile();
-    const projectRoot = await findBallerinaPackageRoot(currentBallerinaFile);
-
-    if (requiresPackageSelection(workspacePath, view, projectPath, isWebviewOpen, hasActiveTextEditor)) {
-        await openTypeDiagramForWorkspace(projectInfo);
-        return;
-    }
-
-    if (needsProjectDiscovery(projectInfo, projectRoot, projectPath)) {
-        try {
-            const success = await tryOpenTypeDiagramForDiscoveredProject();
-            if (!success) {
-                vscode.window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
-            }
-        } catch {
-            vscode.window.showErrorMessage(MESSAGES.NO_PROJECT_FOUND);
-        }
-        return;
-    }
-
-    openTypeDiagramView();
-}
-
-// --- End Type Diagram Command Helpers ---

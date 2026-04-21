@@ -65,14 +65,14 @@ on:
         type: boolean
         required: false
         default: false 
-      runBIE2ETests:
-        type: boolean
-        required: false
-        default: false  
       runMIE2ETests:
         type: boolean
         required: false
         default: false 
+      runBalE2ETests:
+        type: boolean
+        required: false
+        default: false
 
 env:
   ballerina_version: 2201.7.2
@@ -185,9 +185,9 @@ jobs:
             ]')
           fi
 
-          if [[ "${{ inputs.runBIE2ETests }}" == "true" || ("${{ inputs.enableE2ETests }}" == "true" && "${{ steps.diff.outputs.hasBIDiff }}" == "true")  ]]; then
-            echo "Including BI UI tests in the matrix"
-            matrix=$(echo "$matrix" | jq '.include += [{ "name": "BI", "group": "group1", "path": "bi/bi-extension", "os": "linux" }]')
+          if [[ "${{ inputs.runBalE2ETests }}" == "true" || ("${{ inputs.enableE2ETests }}" == "true" && "${{ steps.diff.outputs.hasBalDiff }}" == "true") || ("${{ inputs.isReleaseBuild}}" == "true" && "${{ inputs.ballerina }}" == "true") ]]; then
+            echo "Including Ballerina UI tests in the matrix"
+            matrix=$(echo "$matrix" | jq '.include += [{ "name": "Ballerina", "group": "group1", "path": "ballerina/ballerina-extension/e2e-test", "os": "linux" }]')
           fi
 
           # Remove "include" from matrix if it is empty to avoid GitHub Actions errors
@@ -458,7 +458,11 @@ jobs:
         shell: bash
         if: steps.run-tests-first.outcome == 'failure' || steps.check-results.outcome == 'success'
         run: |
-          rm -rf workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project
+          if [[ "${{ matrix.name }}" == "Ballerina" ]]; then
+            rm -rf workspaces/${{ matrix.path }}/data/new-project
+          else
+            rm -rf workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project
+          fi
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             cd workspaces/${{ matrix.path }}
             # Run failed tests
@@ -483,7 +487,7 @@ jobs:
           
       - name: Upload recordings
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.name != 'Ballerina'
         with:
           name: ${{ matrix.name }}-e2e-test-recording-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: | 
@@ -492,9 +496,21 @@ jobs:
             workspaces/${{ matrix.path }}/record.mp4
           retention-days: 5
 
+      - name: Upload recordings (Ballerina)
+        uses: actions/upload-artifact@v4
+        if: always() && matrix.name == 'Ballerina'
+        with:
+          name: ${{ matrix.name }}-e2e-test-recording-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
+          path: |
+            workspaces/${{ matrix.path }}/test-resources/videos/**
+            workspaces/${{ matrix.path }}/test-resources/screenshots/**
+            workspaces/${{ matrix.path }}/test-resources/snapshots/**
+            workspaces/${{ matrix.path }}/record.mp4
+          retention-days: 5
+
       - name: Upload log files
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.name != 'Ballerina'
         with:
           name: ${{ matrix.name }}-e2e-test-logs-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: | 
@@ -502,9 +518,18 @@ jobs:
           retention-days: 5
       - name: Upload Project Data Directory
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && matrix.name != 'Ballerina'
         with:
           name: ${{ matrix.name }}-e2e-test-project-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: |
             workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project/**
+          retention-days: 5
+
+      - name: Upload Project Data Directory (Ballerina)
+        uses: actions/upload-artifact@v4
+        if: always() && matrix.name == 'Ballerina'
+        with:
+          name: ${{ matrix.name }}-e2e-test-project-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
+          path: |
+            workspaces/${{ matrix.path }}/data/new-project/**
           retention-days: 5

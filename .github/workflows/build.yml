@@ -185,11 +185,6 @@ jobs:
             ]')
           fi
 
-          if [[ "${{ inputs.runBalE2ETests }}" == "true" || ("${{ inputs.enableE2ETests }}" == "true" && "${{ steps.diff.outputs.hasBalDiff }}" == "true") || ("${{ inputs.isReleaseBuild}}" == "true" && "${{ inputs.ballerina }}" == "true") ]]; then
-            echo "Including Ballerina UI tests in the matrix"
-            matrix=$(echo "$matrix" | jq '.include += [{ "name": "Ballerina", "group": "group1", "path": "ballerina/ballerina-extension", "os": "linux" }]')
-          fi
-
           # Remove "include" from matrix if it is empty to avoid GitHub Actions errors
           if [[ "$(echo "$matrix" | jq '.include | length')" == "0" ]]; then
             matrix=$(echo "$matrix" | jq 'del(.include)')
@@ -458,11 +453,7 @@ jobs:
         shell: bash
         if: steps.run-tests-first.outcome == 'failure' || steps.check-results.outcome == 'success'
         run: |
-          if [[ "${{ matrix.name }}" == "Ballerina" ]]; then
-            rm -rf workspaces/${{ matrix.path }}/data/new-project
-          else
-            rm -rf workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project
-          fi
+          rm -rf workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             cd workspaces/${{ matrix.path }}
             # Run failed tests
@@ -487,7 +478,7 @@ jobs:
           
       - name: Upload recordings
         uses: actions/upload-artifact@v4
-        if: always() && matrix.name != 'Ballerina'
+        if: always()
         with:
           name: ${{ matrix.name }}-e2e-test-recording-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: | 
@@ -496,21 +487,9 @@ jobs:
             workspaces/${{ matrix.path }}/record.mp4
           retention-days: 5
 
-      - name: Upload recordings (Ballerina)
-        uses: actions/upload-artifact@v4
-        if: always() && matrix.name == 'Ballerina'
-        with:
-          name: ${{ matrix.name }}-e2e-test-recording-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
-          path: |
-            workspaces/${{ matrix.path }}/test-resources/videos/**
-            workspaces/${{ matrix.path }}/test-resources/screenshots/**
-            workspaces/${{ matrix.path }}/test-resources/snapshots/**
-            workspaces/${{ matrix.path }}/record.mp4
-          retention-days: 5
-
       - name: Upload log files
         uses: actions/upload-artifact@v4
-        if: always() && matrix.name != 'Ballerina'
+        if: always()
         with:
           name: ${{ matrix.name }}-e2e-test-logs-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: | 
@@ -518,18 +497,108 @@ jobs:
           retention-days: 5
       - name: Upload Project Data Directory
         uses: actions/upload-artifact@v4
-        if: always() && matrix.name != 'Ballerina'
+        if: always()
         with:
           name: ${{ matrix.name }}-e2e-test-project-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
           path: |
             workspaces/mi/mi-extension/src/test/e2e-playwright-tests/data/new-project/**
           retention-days: 5
 
-      - name: Upload Project Data Directory (Ballerina)
-        uses: actions/upload-artifact@v4
-        if: always() && matrix.name == 'Ballerina'
+  BalE2ETest:
+    name: Run Ballerina e2e Test
+    needs: Build_Stage
+    timeout-minutes: 60
+    if: ${{ inputs.runBalE2ETests || (inputs.enableE2ETests && needs.Build_Stage.outputs.runBalExtTests == 'true') || (inputs.isReleaseBuild && inputs.ballerina) }}
+    runs-on: ${{ inputs.runOnAWS && inputs.awsRunnerId || 'ubuntu-latest' }}
+    steps:
+      - name: Restore build
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.name }}-e2e-test-project-${{ matrix.os }}-${{ matrix.group }}-${{ github.run_attempt }}
+          name: ExtBuild
+          path: ./
+
+      - name: Set up workspace
+        run: |
+          unzip build.zip
+          rm build.zip
+
+      - name: Setup Rush
+        uses: gigara/setup-rush@v1.2.0
+        with:
+          pnpm: 10.10.0
+          node: 22.x
+          rush-install: true
+
+      - name: Check for previous test results
+        shell: bash
+        if: github.run_attempt > 1
+        run: |
+          PREVIOUS_ATTEMPT=$((${{ github.run_attempt }} - 1))
+          echo "PREVIOUS_ATTEMPT=$PREVIOUS_ATTEMPT" >> $GITHUB_ENV
+
+      - name: Download previous test results
+        id: check-results
+        if: github.run_attempt > 1
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: Ballerina-e2e-test-results-linux-group1-${{ env.PREVIOUS_ATTEMPT }}
+          path: workspaces/ballerina/ballerina-extension/test-results
+
+      - name: Install packages
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb ffmpeg gnome-keyring libsecret-1.0 dbus-x11
+          cd workspaces/ballerina/ballerina-extension && npx playwright install
+
+      - name: Run Ballerina e2e Test (First Attempt)
+        shell: bash
+        id: run-tests-first
+        if: github.run_attempt == 1 || steps.check-results.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          export $(dbus-launch)
+          export DISPLAY=:98.0
+          cd workspaces/ballerina/ballerina-extension
+          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep group1"
+
+      - name: Run Failed Ballerina e2e Test (Re-run)
+        shell: bash
+        if: steps.run-tests-first.outcome == 'failure' || steps.check-results.outcome == 'success'
+        run: |
+          rm -rf workspaces/ballerina/ballerina-extension/e2e-test/data/new-project
+          export $(dbus-launch)
+          export DISPLAY=:98.0
+          cd workspaces/ballerina/ballerina-extension
+          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep group1 --last-failed"
+
+      - name: Upload Ballerina e2e Test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Ballerina-e2e-test-results-linux-group1-${{ github.run_attempt }}
+          path: workspaces/ballerina/ballerina-extension/test-results/**
+          retention-days: 5
+          include-hidden-files: true
+
+      - name: Upload Ballerina e2e Test recordings
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Ballerina-e2e-test-recording-linux-group1-${{ github.run_attempt }}
           path: |
-            workspaces/${{ matrix.path }}/data/new-project/**
+            workspaces/ballerina/ballerina-extension/e2e-test/test-resources/videos/**
+            workspaces/ballerina/ballerina-extension/e2e-test/test-resources/screenshots/**
+            workspaces/ballerina/ballerina-extension/e2e-test/test-resources/snapshots/**
+            workspaces/ballerina/ballerina-extension/record.mp4
+          retention-days: 5
+
+      - name: Upload Ballerina e2e Test project data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Ballerina-e2e-test-project-linux-group1-${{ github.run_attempt }}
+          path: |
+            workspaces/ballerina/ballerina-extension/e2e-test/data/new-project/**
           retention-days: 5

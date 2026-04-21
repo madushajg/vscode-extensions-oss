@@ -187,7 +187,7 @@ jobs:
 
           if [[ "${{ inputs.runBalE2ETests }}" == "true" || ("${{ inputs.enableE2ETests }}" == "true" && "${{ steps.diff.outputs.hasBalDiff }}" == "true") || ("${{ inputs.isReleaseBuild}}" == "true" && "${{ inputs.ballerina }}" == "true") ]]; then
             echo "Including Ballerina UI tests in the matrix"
-            matrix=$(echo "$matrix" | jq '.include += [{ "name": "Ballerina", "group": "group1", "path": "ballerina/ballerina-extension/e2e-test", "os": "linux" }]')
+            matrix=$(echo "$matrix" | jq '.include += [{ "name": "Ballerina", "group": "group1", "path": "ballerina/ballerina-extension", "os": "linux" }]')
           fi
 
           # Remove "include" from matrix if it is empty to avoid GitHub Actions errors

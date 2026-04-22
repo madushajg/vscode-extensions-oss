@@ -403,6 +403,12 @@ jobs:
           node: 22.x
           rush-install: true
 
+      - name: Install Ballerina distribution
+        if: ${{ matrix.path == 'ballerina/ballerina-extension' }}
+        uses: ballerina-platform/setup-ballerina@v1
+        with:
+          version: ${{ env.ballerina_version }}
+
       - name: Check for previous test results
         shell: bash
         if: github.run_attempt > 1
@@ -534,6 +540,11 @@ jobs:
           pnpm: 10.10.0
           node: 22.x
           rush-install: true
+
+      - name: Install Ballerina distribution
+        uses: ballerina-platform/setup-ballerina@v1
+        with:
+          version: ${{ env.ballerina_version }}
 
       - name: Check for previous test results
         shell: bash

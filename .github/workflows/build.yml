@@ -521,6 +521,10 @@ jobs:
     needs: Build_Stage
     timeout-minutes: 60
     if: ${{ inputs.runBalE2ETests || (inputs.enableE2ETests && needs.Build_Stage.outputs.runBalExtTests == 'true') || (inputs.isReleaseBuild && inputs.ballerina) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [group1, group2, group3, group4]
     runs-on: ${{ inputs.runOnAWS && inputs.awsRunnerId || 'ubuntu-latest' }}
     steps:
       - name: Restore build
@@ -559,7 +563,7 @@ jobs:
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: Ballerina-e2e-test-results-linux-group1-${{ env.PREVIOUS_ATTEMPT }}
+          name: Ballerina-e2e-test-results-linux-${{ matrix.group }}-${{ env.PREVIOUS_ATTEMPT }}
           path: workspaces/ballerina/ballerina-extension/test-results
 
       - name: Install packages
@@ -578,7 +582,7 @@ jobs:
           export $(dbus-launch)
           export DISPLAY=:98.0
           cd workspaces/ballerina/ballerina-extension
-          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep group1"
+          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep ${{ matrix.group }}"
 
       - name: Run Failed Ballerina e2e Test (Re-run)
         shell: bash
@@ -588,13 +592,13 @@ jobs:
           export $(dbus-launch)
           export DISPLAY=:98.0
           cd workspaces/ballerina/ballerina-extension
-          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep group1 --last-failed"
+          xvfb-run --server-num 98.0 -s "-ac -screen 0 1920x1080x24" bash -c "ffmpeg -f x11grab -r 30 -s 1920x1080 -i :98.0 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -movflags +faststart -hide_banner -loglevel error record.mp4 & pnpm exec playwright test -c e2e-test/playwright.config.js --grep ${{ matrix.group }} --last-failed"
 
       - name: Upload Ballerina e2e Test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Ballerina-e2e-test-results-linux-group1-${{ github.run_attempt }}
+          name: Ballerina-e2e-test-results-linux-${{ matrix.group }}-${{ github.run_attempt }}
           path: workspaces/ballerina/ballerina-extension/test-results/**
           retention-days: 5
           include-hidden-files: true
@@ -603,7 +607,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Ballerina-e2e-test-recording-linux-group1-${{ github.run_attempt }}
+          name: Ballerina-e2e-test-recording-linux-${{ matrix.group }}-${{ github.run_attempt }}
           path: |
             workspaces/ballerina/ballerina-extension/e2e-test/test-resources/videos/**
             workspaces/ballerina/ballerina-extension/e2e-test/test-resources/screenshots/**
@@ -615,7 +619,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Ballerina-e2e-test-project-linux-group1-${{ github.run_attempt }}
+          name: Ballerina-e2e-test-project-linux-${{ matrix.group }}-${{ github.run_attempt }}
           path: |
             workspaces/ballerina/ballerina-extension/e2e-test/data/new-project/**
           retention-days: 5

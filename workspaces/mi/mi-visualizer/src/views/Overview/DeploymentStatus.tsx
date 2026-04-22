@@ -174,7 +174,7 @@ export function DeploymentOptions({ handleDockerBuild, handleConfigureKubernetes
                 isExpanded={expandedOptions.has("devant")}
                 onToggle={() => toggleOption("devant")}
                 onDeploy={devantMetadata?.hasComponent ? () => goToDevant() : () => handleDeploy({})}
-                learnMoreLink={"https://wso2.com/devant/docs"}
+                learnMoreLink={"https://wso2.com/devant/docs/"}
                 secondaryAction={
                     devantMetadata?.hasComponent && devantMetadata?.hasLocalChanges
                         ? {

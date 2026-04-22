@@ -80,9 +80,9 @@ on:
         default: ''
 
 env:
-  ballerina_version: 2201.7.2
-  ballerina_zip_url: https://github.com/ballerina-platform/ballerina-distribution/releases/download/v2201.7.2/ballerina-2201.7.2-swan-lake.zip
-  ballerina_deb_url: https://dist.ballerina.io/downloads/2201.7.2/ballerina-2201.7.2-swan-lake-linux-x64.deb
+  ballerina_version: 2201.13.1
+  ballerina_zip_url: https://github.com/ballerina-platform/ballerina-distribution/releases/download/v2201.13.1/ballerina-2201.13.1-swan-lake.zip
+  ballerina_deb_url: https://dist.ballerina.io/downloads/2201.13.1/ballerina-2201.13.1-swan-lake-linux-x64.deb
 
 jobs:
   Build_Stage:

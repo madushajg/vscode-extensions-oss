@@ -177,11 +177,9 @@ module.exports = {
         }
         if (pkg.dependencies['uuid']) {
           const ver = pkg.dependencies['uuid'];
-          if (/^[\^~]?8\./.test(ver)) {
+          if (/^[\^~]?(8|11)\./.test(ver)) {
             pkg.dependencies['uuid'] = '14.0.0';
-          } else if (/^[\^~]?11\./.test(ver)) {
-            pkg.dependencies['uuid'] = '14.0.0';
-          }
+          } 
         }
       }
 

@@ -80,7 +80,7 @@ module.exports = {
           if (/^[\^~]?4\./.test(ver)) {
             pkg.dependencies['fast-xml-parser'] = '4.5.5';
           } else {
-            pkg.dependencies['fast-xml-parser'] = '5.5.7';
+            pkg.dependencies['fast-xml-parser'] = '5.7.0';
           }
         }
         if (pkg.dependencies['hono']) {
@@ -175,6 +175,14 @@ module.exports = {
             pkg.dependencies['yaml'] = '^2.8.3';
           }
         }
+        if (pkg.dependencies['uuid']) {
+          const ver = pkg.dependencies['uuid'];
+          if (/^[\^~]?8\./.test(ver)) {
+            pkg.dependencies['uuid'] = '14.0.0';
+          } else if (/^[\^~]?11\./.test(ver)) {
+            pkg.dependencies['uuid'] = '14.0.0';
+          }
+        }
       }
 
       if (pkg.devDependencies) {
@@ -235,7 +243,7 @@ module.exports = {
           if (/^[\^~]?4\./.test(ver)) {
             pkg.devDependencies['fast-xml-parser'] = '4.5.5';
           } else {
-            pkg.devDependencies['fast-xml-parser'] = '5.5.7';
+            pkg.devDependencies['fast-xml-parser'] = '5.7.0';
           }
         }
         if (pkg.devDependencies['hono']) {
@@ -328,6 +336,14 @@ module.exports = {
             pkg.devDependencies['yaml'] = '^1.10.3';
           } else if (/^[\^~]?2\./.test(ver)) {
             pkg.devDependencies['yaml'] = '^2.8.3';
+          }
+        }
+        if (pkg.devDependencies['uuid']) {
+          const ver = pkg.devDependencies['uuid'];
+          if (/^[\^~]?8\./.test(ver)) {
+            pkg.devDependencies['uuid'] = '14.0.0';
+          } else if (/^[\^~]?11\./.test(ver)) {
+            pkg.devDependencies['uuid'] = '14.0.0';
           }
         }
       }

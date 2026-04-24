@@ -25,7 +25,7 @@ module.exports = {
         if (deps['js-yaml']) deps['js-yaml'] = '4.1.1';
         if (deps['diff']) deps['diff'] = '8.0.3';
         if (deps['eslint']) deps['eslint'] = '^9.27.0';
-        if (deps['fast-xml-parser']) deps['fast-xml-parser'] = '5.5.7';
+        if (deps['fast-xml-parser']) deps['fast-xml-parser'] = '5.7.0';
         if (deps['esbuild']) deps['esbuild'] = '0.25.12';
         if (deps['lodash']) deps['lodash'] = '4.18.0';
         if (deps['qs']) deps['qs'] = '6.14.2';
@@ -137,6 +137,14 @@ module.exports = {
             newVersion = currentVersion;
           }
           deps['yaml'] = newVersion;
+        }
+        if (deps['uuid']) {
+          const ver = deps['uuid'];
+          if (ver.startsWith('^8') || ver.startsWith('8')) {
+            deps['uuid'] = '14.0.0';
+          } else if (ver.startsWith('^11') || ver.startsWith('11')) {
+            deps['uuid'] = '14.0.0';
+          }
         }
       }
 

@@ -1,0 +1,9 @@
+[package]
+org = "madusha"
+name = "projovintb1779345570596"
+version = "0.1.0"
+distribution = "2201.13.3"
+title = "ProjOvIntB1779345570596"
+
+[build-options]
+sticky = true

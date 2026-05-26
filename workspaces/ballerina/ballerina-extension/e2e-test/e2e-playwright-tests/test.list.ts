@@ -76,6 +76,7 @@ import reusableDataMapper from './data-mapper/reusable-data-mapper.spec';
 import inlineDataMapper from './data-mapper/inline-data-mapper.spec';
 
 import createProject from './project-creation/project-creation.spec';
+import projectOverview from './project-creation/project-overview.spec';
 
 import diagram from './diagram/diagram.spec';
 
@@ -108,6 +109,7 @@ test.beforeAll(async () => {
 test.describe('Ballerina E2E Group 1', { tag: '@group1' }, async () => {
     // <----Create Project Test---->
     test.describe(createProject);
+    test.describe(projectOverview);
 
     // <----Automation Test---->
     test.describe(automation);

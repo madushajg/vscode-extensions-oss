@@ -59,6 +59,7 @@ export enum SCOPE {
     AI_AGENT = "ai-agent",
     MCP = "mcp-server",
     LIBRARY = "library",
+    WORKFLOW = "workflow",
     ANY = "any"
 }
 

@@ -30,20 +30,40 @@ async function generateIconFont() {
 
     console.log('Generating icon font...');
 
-    // Lock in codepoints already assigned to existing icons, read from this
-    // checked-in snapshot (NOT from dist/, which is gitignored and won't exist
-    // on a fresh checkout/CI run). Without this, adding or removing an icon
-    // re-numbers every glyph alphabetically after it, which silently breaks the
-    // `fontCharacter` values VS Code's native `contributes.icons` hardcodes per
-    // icon in packages/ballerina-extension/package.json (those aren't generated
-    // from this font's own json/css — they have to be updated by hand, and only
-    // for icons that actually moved). Keeping existing codepoints fixed means a
-    // build only ever assigns *new* codepoints to *new* icons, deterministically,
-    // on every machine.
-    const codepointsPath = path.join(__dirname, 'codepoints.json');
-    const codepoints = fs.existsSync(codepointsPath)
-      ? JSON.parse(fs.readFileSync(codepointsPath, 'utf8'))
-      : {};
+    // Fantasticon assigns every glyph a codepoint alphabetically on each run, so
+    // adding or removing one icon renumbers every glyph after it. That's fine
+    // for glyphs used only by name (via the generated css/json — the app's
+    // Icon component and its consumers), but VS Code's native
+    // `contributes.icons` in packages/ballerina-extension/package.json
+    // hardcodes a `fontCharacter` codepoint per icon by hand, disconnected
+    // from this build. Pin exactly those codepoints so they can't drift; every
+    // other glyph (the vast majority) is free to renumber as usual.
+    //
+    // This list must stay in sync with the `fontCharacter` values under
+    // packages/ballerina-extension/package.json's `contributes.icons` (only
+    // entries whose fontPath points at this font). If you add a new
+    // `contributes.icons` entry here, add its glyph name below too.
+    const codepoints = {
+      'bi-ai-agent': 61714,                            // \f112
+      'bi-ai-chat': 61715,                              // \f113
+      'bi-data-table': 61749,                           // \f135
+      'bi-ai-function': 61716,                          // \f114
+      'bi-output': 61813,                               // \f175
+      'scheduled-message-forwarding-processor': 62026,  // \f24a
+      'custom': 61889,                                  // \f1c1
+      'bi-fit-screen': 61769,                           // \f149
+      'nested': 61984,                                  // \f220
+      'Aggregate': 61702,                               // \f106
+      'alarm-round': 61703,                             // \f107
+      'bi-bold': 61728,                                 // \f120
+      'bi-back': 61727,                                 // \f11f
+      'bi-attach-file': 61724,                          // \f11c
+      'bi-audio': 61725,                                // \f11d
+      'bi-download-loop': 61757,                        // \f13d
+      'add-circle-outline': 61698,                      // \f102
+      'bi-cut': 61748,                                  // \f134
+      'database-round': 61894,                          // \f1c6
+    };
 
     // Fantasticon configuration
     const config = {
@@ -63,12 +83,6 @@ async function generateIconFont() {
     };
 
     await generateFonts(config);
-
-    // Persist the (possibly extended) codepoint assignments so the next build —
-    // on this machine or a fresh one — locks in today's new icons too.
-    const finalCodepoints = JSON.parse(fs.readFileSync(path.join(distDir, 'wso2-vscode.json'), 'utf8'));
-    fs.writeFileSync(codepointsPath, JSON.stringify(finalCodepoints, null, 2) + '\n');
-
     console.log('✅ Icon font generated successfully!');
     
   } catch (error) {

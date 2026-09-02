@@ -29,7 +29,22 @@ async function generateIconFont() {
     }
 
     console.log('Generating icon font...');
-    
+
+    // Lock in codepoints already assigned to existing icons, read from this
+    // checked-in snapshot (NOT from dist/, which is gitignored and won't exist
+    // on a fresh checkout/CI run). Without this, adding or removing an icon
+    // re-numbers every glyph alphabetically after it, which silently breaks the
+    // `fontCharacter` values VS Code's native `contributes.icons` hardcodes per
+    // icon in packages/ballerina-extension/package.json (those aren't generated
+    // from this font's own json/css — they have to be updated by hand, and only
+    // for icons that actually moved). Keeping existing codepoints fixed means a
+    // build only ever assigns *new* codepoints to *new* icons, deterministically,
+    // on every machine.
+    const codepointsPath = path.join(__dirname, 'codepoints.json');
+    const codepoints = fs.existsSync(codepointsPath)
+      ? JSON.parse(fs.readFileSync(codepointsPath, 'utf8'))
+      : {};
+
     // Fantasticon configuration
     const config = {
       inputDir: path.join(__dirname, '..', 'icons'),
@@ -39,6 +54,7 @@ async function generateIconFont() {
       name: 'wso2-vscode',
       prefix: 'fw',
       normalize: true,
+      codepoints,
       formatOptions: {
         json: {
           indent: 2
@@ -47,6 +63,12 @@ async function generateIconFont() {
     };
 
     await generateFonts(config);
+
+    // Persist the (possibly extended) codepoint assignments so the next build —
+    // on this machine or a fresh one — locks in today's new icons too.
+    const finalCodepoints = JSON.parse(fs.readFileSync(path.join(distDir, 'wso2-vscode.json'), 'utf8'));
+    fs.writeFileSync(codepointsPath, JSON.stringify(finalCodepoints, null, 2) + '\n');
+
     console.log('✅ Icon font generated successfully!');
     
   } catch (error) {
